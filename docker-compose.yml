@@ -1,0 +1,66 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: social-app
+    ports:
+      - "${APP_PORT}:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+      - redis
+    command: >
+      sh -c "
+      chown -R www-data:www-data storage bootstrap/cache &&
+      chmod -R 775 storage bootstrap/cache &&
+      apache2-foreground
+      "
+
+  node:
+    image: node:24
+    container_name: social-node
+    working_dir: /var/www/html
+    ports:
+      - "${VITE_PORT}:5173"
+    volumes:
+      - .:/var/www/html
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"    
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: social-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    container_name: social-redis
+    ports:
+      - "${REDIS_PORT}:6379"
+
+  # ✅ OPTIONAL BUT VERY IMPORTANT (queues, notifications, jobs)
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: social-queue
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - app
+      - redis
+    command: php artisan queue:work
+
+volumes:
+  db-data:
