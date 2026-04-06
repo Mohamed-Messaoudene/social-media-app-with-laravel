@@ -45,7 +45,7 @@ class Post extends Model
     protected $appends = [
         'image_url',
         'is_liked_by_auth',
-        'is_bookmarked_by_auth',
+        // 'is_bookmarked_by_auth',
     ];
 
     /*

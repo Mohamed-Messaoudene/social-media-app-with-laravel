@@ -60,7 +60,6 @@ services:
     depends_on:
       - app
       - redis
-    command: php artisan queue:work
-
+    command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90 --verbose
 volumes:
   db-data:

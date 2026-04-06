@@ -5,8 +5,9 @@ use Illuminate\Support\Facades\Route;
 // Controllers
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
-// use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\PostController;
+// use App\Http\Controllers\Auth\PasswordResetController;
+// use App\Http\Controllers\PostController;
 // use App\Http\Controllers\CommentController;
 // use App\Http\Controllers\LikeController;
 use App\Http\Controllers\ProfileController;
@@ -61,6 +62,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // ==================== HOME & FEED ====================
+    // Route::get('/home', [ProfileController::class, 'show'])->name('home');
+    // redirect to profile
     Route::get('/home', [PostController::class, 'index'])->name('home');
     // Route::get('/explore', [PostController::class, 'explore'])->name('explore');
     // Route::get('/trending', [PostController::class, 'trending'])->name('trending');
@@ -93,8 +96,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // });
 
     // ==================== PROFILE ====================
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.edit');
+    Route::get('/profile/{user:username}', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile/{user:username}', [ProfileController::class, 'update'])->name('profile.edit');
     // Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
     // Route::post('/profile/cover', [ProfileController::class, 'updateCover'])->name('profile.cover');
 
@@ -131,7 +134,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
     // // ==================== LOGOUT ====================
-    // Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 /*

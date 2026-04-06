@@ -4,6 +4,11 @@
     "module": "ESNext",
     "jsx": "react-jsx",
 
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["resources/js/*"]
+    },
+
     "strict": true,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,

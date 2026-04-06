@@ -41,7 +41,8 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user() ? [
                     'id' => $request->user()->id,
                     'username' => $request->user()->username,
-                    'profileImagePath' => $request->user()->profile_image_path,
+                    'email' => $request->user()->email,
+                    'profile_image_url' => $request->user()->profile_image_url,
                     'is_verified' => $request->user()->is_verified,
                 ] : null,
             ],
@@ -51,6 +52,98 @@ class HandleInertiaRequests extends Middleware
                     ? $request->session()->get('errors')->getBag('default')->getMessages()
                     : (object)[];
             },
+
+            // ── Suggestions (people you may know) ─────────────────────
+            // Only load when authenticated
+            'suggestions' => $request->user() ? [
+                [
+                    'id'               => 44,
+                    'username'         => 'amira.design',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=amira.design',
+                ],
+                [
+                    'id'               => 55,
+                    'username'         => 'youcef_photo',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=youcef_photo',
+                ],
+                [
+                    'id'               => 66,
+                    'username'         => 'nassim.ui',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=nassim.ui',
+                ],
+            ] : [],
+
+            // ── Friends (people auth user follows) ────────────────────
+            'friends' => $request->user() ? [
+                [
+                    'id'               => 12,
+                    'username'         => 'sarah_dev',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=sarah_dev',
+                ],
+                [
+                    'id'               => 7,
+                    'username'         => 'karim_runs',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=karim_runs',
+                ],
+                [
+                    'id'               => 31,
+                    'username'         => 'lina.codes',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=lina.codes',
+                ],
+                [
+                    'id'               => 32,
+                    'username'         => 'lina.codes',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=lina.codes',
+                ],[
+                    'id'               => 81,
+                    'username'         => 'lina.codes',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=lina.codes',
+                ],
+            ] : [],
+
+            // ── Online friends (active in last 5 min) ─────────────────
+            'onlineFriends' => $request->user() ? [
+                [
+                    'id'               => 7,
+                    'username'         => 'karim_runs',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=karim_runs',
+                ],
+                [
+                    'id'               => 31,
+                    'username'         => 'lina.codes',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=lina.codes',
+                ],
+                [
+                    'id'               => 44,
+                    'username'         => 'amira.design',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=amira.design',
+                ],
+                [
+                    'id'               => 55,
+                    'username'         => 'youcef_photo',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=youcef_photo',
+                ],
+                [
+                    'id'               => 66,
+                    'username'         => 'nassim.ui',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=nassim.ui',
+                ],
+                 [
+                    'id'               => 67,
+                    'username'         => 'nassim.ui',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=nassim.ui',
+                ], [
+                    'id'               => 68,
+                    'username'         => 'nassim.ui',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=nassim.ui',
+                ], [
+                    'id'               => 69,
+                    'username'         => 'nassim.ui',
+                    'profileImagePath' => 'https://i.pravatar.cc/150?u=nassim.ui',
+                ],
+
+            ] : [],
+
         ]);
     }
 }

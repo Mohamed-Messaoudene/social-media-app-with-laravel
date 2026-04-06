@@ -5,32 +5,40 @@ export const loginSchema = z.object({
         .string()
         .min(1, "Email is required")
         .email("Please enter a valid email address"),
+
     password: z
         .string()
-        .min(1, "Password is required")
-        .min(6, "Password must be at least 6 characters"),
+        .min(1, "Password is required"),
+
+    remember: z.boolean().optional(),
 });
 
 export const registerSchema = z
     .object({
         username: z
             .string()
-            .min(1, "Username is required")
-            .min(3, "Username must be at least 3 characters")
-            .max(20, "Username must be at most 20 characters"),
+            .min(1, "Please enter a username.")
+            .min(3, "Username must be at least 3 characters.")
+            .max(30, "Username must be at most 30 characters.")
+            .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores."),
+
         email: z
             .string()
-            .min(1, "Email is required")
-            .email("Please enter a valid email address"),
+            .min(1, "Please enter your email address.")
+            .email("Please enter a valid email address."),
+
         password: z
             .string()
-            .min(1, "Password is required")
-            .min(6, "Password must be at least 6 characters"),
+            .min(1, "Please enter a password.")
+            .min(8, "Password must be at least 8 characters.")
+            .regex(/[a-z]/, "Password must contain at least one lowercase letter.")
+            .regex(/[A-Z]/, "Password must contain at least one uppercase letter."),
+
         password_confirmation: z
             .string()
-            .min(1, "Password confirmation is required")
-            .min(6, "Password confirmation must be at least 6 characters"),
+            .min(1, "Password confirmation is required"),
     })
     .refine((data) => data.password === data.password_confirmation, {
-        message: "Passwords do not match",
+        message: "Password confirmation does not match.",
+        path: ["password_confirmation"]
     });

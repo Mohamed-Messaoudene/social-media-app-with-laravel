@@ -5,12 +5,12 @@ import AddNewStory from './AddNewStory'
 
 function Stories() {
   return (
-    <Box  display="flex" justifyContent="space-between" alignItems="center" paddingTop={"15px"}>
+    <Box  display="flex" justifyContent="space-between" alignItems="center" paddingBlock={"15px"}>
     <AddNewStory imgUrl="/story1.jpg"/>
-    <Story imgUrl="/story2.jpg" username="berkane" />
-    <Story imgUrl="/story3.jpg" username="ali boucetta" />
-    <Story imgUrl="/story4.jpg" username="boumedian" />
-    <Story imgUrl="/story5.jpg" username="abd elnour"/>
+    <Story imgUrl="/public/default_cover_image.jpg" username="berkane" />
+    <Story imgUrl="/public/default_cover_image.jpg" username="ali boucetta" />
+    <Story imgUrl="/public/default_cover_image.jpg" username="boumedian" />
+    <Story imgUrl="/public/default_cover_image.jpg" username="abd -elnour"/>
   </Box>
   )
 }

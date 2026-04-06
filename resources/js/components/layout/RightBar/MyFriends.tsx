@@ -1,104 +1,50 @@
-import { Box, Typography, useTheme, Button } from "@mui/material";
 import React from "react";
-import UserAvatar from "../../ui/Avatar";
-import ScrollableBox from "../../ui/ScrollableBox";
-import { Link, usePage } from "@inertiajs/react";
-import { PersonAddAlt1 as PersonAddAlt1Icon } from "@mui/icons-material";
-import { Inertia } from "@inertiajs/inertia";
-import CustomButton from "../../ui/CustomButton";
-import { useSnackBar } from "../../../context/SnackBarContext";
-import { SharedProps } from "../../../types/global";
-import { User } from "../../../types/common";
-
+import { usePage, router } from "@inertiajs/react";
+import { PeopleAlt } from "@mui/icons-material";
+import { useSnackBar } from "@/context/SnackBarContext";
+import { SharedProps } from "@/types/global";
+import { RightbarCard, UserRow, EmptyState } from "@/components/layout/RightBar/RightBarShared";
+import { ProfileUser } from "@/types/profile";
 
 function MyFriends() {
-  const { friends } = usePage<SharedProps & {
-    friends: User[]
-  }>().props 
-  const theme = useTheme();
-  const {showSnackBar} = useSnackBar()
+    const { friends } = usePage<SharedProps & { friends: ProfileUser[] }>().props;
+    const { showSnackBar } = useSnackBar();
 
-  const handleUnfollow = (friendId: number): void => {
-    Inertia.post(`/profile/${friendId}/unfollow`, {}, {
-      onSuccess: () => {
-        showSnackBar(
-           "Profile unfollowed successfully",
+    const handleUnfollow = (id: number, username: string) => {
+        router.post(
+            `/profile/${id}/unfollow`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => showSnackBar(`Unfollowed @${username}`, "success"),
+                onError: () => showSnackBar("Could not unfollow. Try again.", "warning"),
+            }
         );
-      },
-      onError: () => {
-        showSnackBar(
-          "Profile unfollowing failed, please try again!",
-          "warning"
-        );
-      },
-    });
-  };
+    };
 
-  return (
-    <Box
-      width="100%"
-      padding="12px"
-      marginBlock={'20px'}
-      borderRadius="8px"
-      sx={{
-        backgroundColor: theme.palette.background.paper,
-        boxShadow: "2px 8px 19px -5px rgba(159,162,175,0.5)",
-      }}
-    >
-      <Typography
-        variant="body1"
-        sx={{
-          color: theme.palette.text.primary,
-          marginBottom: "20px",
-          fontWeight: "bold",
-        }}
-      >
-        My Friends
-      </Typography>
-
-      {friends.length > 0 ? (
-        <ScrollableBox maxHeight="150px" scrollAmount={150}>
-          {friends.map((friend, index) => (
-            <Box
-              key={index}
-              height="40px"
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              marginBottom="8px"
-            >
-              <Link href={`/profile/${friend.id}`} style={{ textDecoration: "none" }}>
-                <UserAvatar imgUrl={friend.profileImagePath} username={friend.username} />
-              </Link>
-              <Box>
-                <CustomButton content="Unfollow" bgcolor="red" handleClick={() => handleUnfollow(friend.id)} />
-              </Box>
-            </Box>
-          ))}
-        </ScrollableBox>
-      ) : (
-        // No friends UI
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          textAlign="center"
-          padding="20px"
-        >
-          <PersonAddAlt1Icon
-            sx={{ fontSize: 50, color: theme.palette.primary.main, marginBottom: "10px" }}
-          />
-          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: "bold" }}>
-            You have no friends yet!
-          </Typography>
-          <Typography variant="caption" sx={{ color: theme.palette.text.disabled, marginBottom: "15px" }}>
-            Start connecting with people now.
-          </Typography>
-        </Box>
-      )}
-    </Box>
-  );
+    return (
+        <RightbarCard title="Following" action={{ label: "See all", href: "/friends" }}>
+            {friends.length > 0 ? (
+                friends.slice(0, 5).map((f) => (
+                    <UserRow
+                        key={f.id}
+                        id={f.id}
+                        username={f.username}
+                        profileImagePath={f.profile_image_url}
+                        actionLabel="Unfollow"
+                        actionColor="error"
+                        onAction={() => handleUnfollow(f.id, f.username)}
+                    />
+                ))
+            ) : (
+                <EmptyState
+                    icon={<PeopleAlt fontSize="inherit" />}
+                    title="Not following anyone yet"
+                    subtitle="Start connecting with people you know."
+                />
+            )}
+        </RightbarCard>
+    );
 }
 
 export default MyFriends;

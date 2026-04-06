@@ -1,15 +1,21 @@
-import { Box } from "@mui/material";
 import React from "react";
-import Suggesstions from "./Suggesstions";
-import OnlineFriends from "./OnlineFriends";
+import { Box } from "@mui/material";
 import MyFriends from "./MyFriends";
+import OnlineFriends from "./OnlineFriends";
+import Suggestions from "./Suggesstions";
 
 function Rightbar() {
     return (
-        <Box padding="20px 15px 30px 0px">
-            <Suggesstions />
-            <MyFriends />
+        <Box
+            display="flex"
+            flexDirection="column"
+            gap={2}
+            px={2}
+            py={2.5}
+        >
             <OnlineFriends />
+            <Suggestions />
+            <MyFriends />
         </Box>
     );
 }

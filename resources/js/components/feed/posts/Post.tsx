@@ -17,43 +17,36 @@ import {
     Clear,
 } from "@mui/icons-material";
 import Comments from "./Comments";
-import UserAvatar from "../UserAvatar";
-import PropTypes from "prop-types";
-import { useSnackBar } from "../../context/SnackBarContext";
-import { useAuth } from "../../context/AuthContext";
+import UserAvatar from "@/components/ui/Avatar";
+import { useSnackBar } from "@/context/SnackBarContext";
+import { useAuth } from "@/context/AuthContext";
 import { Link } from "@inertiajs/react";
+import { Post as PostType } from "@/types/post";
+import { Inertia } from "@inertiajs/inertia";
 
-function Post({ post}) {
+function Post({ post }: { post: PostType }) {
     const [showComments, setShowComments] = useState(false); // Initially hide comments
     const theme = useTheme();
     const { user } = useAuth();
-    const {setSnackBarParams} = useSnackBar();
+    const { showSnackBar } = useSnackBar();
     const postId = post.id;
-    const isMine = post.user.id == user.id;
+    const isMine = false;
 
     // Delete post handler
     const handleDeletePost = async () => {
-     Inertia.delete(`/posts/${postId}`,{
-        onSuccess: () => {
-            setSnackBarParams({
-                open: true,
-                color: "success",
-                message: "post deleted successfully",
-            });
-        },
-        onError: () => {
-            setSnackBarParams({
-                open: true,
-                color: "warning",
-                message: "post deleting failed ,please try again !!!",
-            });
-        },
-     })
+        Inertia.delete(`/posts/${postId}`, {
+            onSuccess: () => {
+                showSnackBar( "post deleted successfully");
+            },
+            onError: () => {
+                showSnackBar("post deleting failed ,please try again !!!");
+            },
+        });
     };
 
     // Like post handler
     const handleLikeClick = async () => {
-        if (post.liked) {
+        if (post.is_liked_by_auth) {
             Inertia.delete(`/posts/${postId}/likes`);
         } else {
             Inertia.post(`/posts/${postId}/likes`);
@@ -82,16 +75,16 @@ function Post({ post}) {
                 justifyContent="space-between"
                 alignItems="center"
             >
-                <Link
+                {/* <Link
                     href={`/profile/${post.user_id}`}
                     style={{ textDecoration: "none" }}
-                >
+                > */}
                     <UserAvatar
-                        imgUrl={post.user.profileImagePath}
-                        username={post.user.username}
-                        extraInfo={post.time_passed}
+                        imgUrl={user?.profile_image_url || "/default-avatar.png"}
+                        username={user?.username || "Unknown"}
+                        extraInfo={ post.published_at.diff!}
                     />
-                </Link>
+                {/* </Link> */}
                 {isMine && (
                     <Tooltip title="delete" placement="bottom">
                         <IconButton
@@ -106,14 +99,14 @@ function Post({ post}) {
             <Box>
                 <Typography
                     variant="body1"
-                    color={theme.palette.primary.text}
+                    color={theme.palette.text.primary}
                     padding="10px 0px 10px 10px"
                 >
-                    {post.postText}
+                    {post.content}
                 </Typography>
-                {post.postImagePath && (
+                {post.image_url && (
                     <img
-                        src={post.postImagePath}
+                        src={post.image_url}
                         alt="post photo"
                         width="98%"
                         style={{ marginBlock: "5px" }}
@@ -122,12 +115,12 @@ function Post({ post}) {
             </Box>
             <Box display="flex" alignItems="center">
                 <FormControlLabel
-                    sx={{ color: theme.palette.primary.text }}
+                    sx={{ color: theme.palette.text.primary }}
                     control={
                         <Checkbox
                             icon={<FavoriteBorder />}
                             checkedIcon={<Favorite sx={{ color: "red" }} />}
-                            checked={post.liked}
+                            checked={post.is_liked_by_auth}
                             onChange={handleLikeClick}
                         />
                     }
@@ -138,7 +131,7 @@ function Post({ post}) {
                     startIcon={<SmsOutlined />}
                     sx={{
                         textTransform: "none",
-                        color: theme.palette.primary.text,
+                        color: theme.palette.text.primary,
                     }}
                     onClick={handleCommentClick}
                 >
@@ -149,51 +142,19 @@ function Post({ post}) {
                     startIcon={<Share />}
                     sx={{
                         textTransform: "none",
-                        color: theme.palette.primary.text,
+                        color: theme.palette.text.primary,
                     }}
                 >
                     Share
                 </Button>
             </Box>
-            {showComments && (
+            {/* {showComments && (
                 <Box>
                     <Comments postId={post.id} postComments={post.comments} />
                 </Box>
-            )}
+            )} */}
         </Box>
     );
 }
-
-// Prop Types Validation
-Post.propTypes = {
-    post: PropTypes.shape({
-        id: PropTypes.number.isRequired,
-        postText: PropTypes.string.isRequired,
-        postImagePath: PropTypes.string,
-        likes_count: PropTypes.number.isRequired,
-        user: PropTypes.shape({
-            id: PropTypes.number.isRequired,
-            profileImagePath: PropTypes.string.isRequired,
-            username: PropTypes.string.isRequired,
-        }).isRequired,
-        time_passed: PropTypes.string.isRequired,
-        liked: PropTypes.bool.isRequired,
-        comments: PropTypes.arrayOf(
-            PropTypes.shape({
-                id: PropTypes.number.isRequired,
-                post_id: PropTypes.number.isRequired,
-                user_id: PropTypes.number.isRequired,
-                comment_text: PropTypes.string.isRequired,
-                created_at: PropTypes.string.isRequired,
-                time_passed: PropTypes.string.isRequired,
-                user: PropTypes.shape({
-                    id: PropTypes.number.isRequired,
-                    username: PropTypes.string.isRequired,
-                    profileImagePath: PropTypes.string.isRequired,
-                }).isRequired,
-            })
-        ).isRequired,
-    }).isRequired,
-};
 
 export default Post;

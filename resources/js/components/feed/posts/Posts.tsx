@@ -1,10 +1,14 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import PropTypes from "prop-types";
-import Post from "./Post";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied"; // Import an icon
+import { PaginatedResponse } from "@/types/common";
+import { Post as PostType } from "@/types/post";
+import Post from "./Post";
 
-function Posts({ allPosts }) {
+type PostsProps = {
+    posts: PaginatedResponse<PostType>;
+};
+function Posts({ posts }: PostsProps) {
     return (
         <Box
             display="flex"
@@ -13,13 +17,8 @@ function Posts({ allPosts }) {
             alignItems="center"
             paddingInline={"20px"}
         >
-            {allPosts.length > 0 ? (
-                allPosts.map((post) => (
-                    <Post
-                        key={post.id}
-                        post={post}
-                    />
-                ))
+            {posts?.data.length > 0 ? (
+                posts.data.map((post) => <Post key={post.id} post={post} />)
             ) : (
                 <Box
                     display="flex"
@@ -51,41 +50,5 @@ function Posts({ allPosts }) {
         </Box>
     );
 }
-
-// Prop validation for the `allPosts` array
-Posts.propTypes = {
-  allPosts: PropTypes.arrayOf(
-      PropTypes.shape({
-          id: PropTypes.number.isRequired,
-          user_id: PropTypes.number.isRequired,
-          postText: PropTypes.string.isRequired,
-          postImagePath: PropTypes.string,
-          created_at: PropTypes.string.isRequired,
-          time_passed: PropTypes.string.isRequired,
-          liked: PropTypes.bool.isRequired,
-          likes_count: PropTypes.number.isRequired,
-          user: PropTypes.shape({
-              id: PropTypes.number.isRequired,
-              username: PropTypes.string.isRequired,
-              profileImagePath: PropTypes.string.isRequired,
-          }).isRequired,
-          comments: PropTypes.arrayOf(
-              PropTypes.shape({
-                  id: PropTypes.number.isRequired,
-                  post_id: PropTypes.number.isRequired,
-                  user_id: PropTypes.number.isRequired,
-                  comment_text: PropTypes.string.isRequired,
-                  created_at: PropTypes.string.isRequired,
-                  time_passed: PropTypes.string.isRequired,
-                  user: PropTypes.shape({
-                      id: PropTypes.number.isRequired,
-                      username: PropTypes.string.isRequired,
-                      profileImagePath: PropTypes.string.isRequired,
-                  }).isRequired,
-              })
-          ).isRequired,
-      })
-  ).isRequired,
-};
 
 export default Posts;

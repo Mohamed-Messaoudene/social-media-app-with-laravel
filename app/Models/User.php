@@ -63,9 +63,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'full_name',
         'profile_image_url',
         'cover_image_url',
-        'followers_count',
-        'following_count',
-        'posts_count',
     ];
 
     /*
@@ -215,7 +212,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get the user's profile image URL.
      */
-    public function getProfileImageUrlAttribute(): string
+    public function getProfileImageUrlAttribute(): ?string
     {
         return $this->profile_image_path
             ? Storage::url($this->profile_image_path)
@@ -230,30 +227,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->cover_image_path
             ? Storage::url($this->cover_image_path)
             : null;
-    }
-
-    /**
-     * Get followers count (cached).
-     */
-    public function getFollowersCountAttribute(): int
-    {
-        return $this->followers()->count();
-    }
-
-    /**
-     * Get following count (cached).
-     */
-    public function getFollowingCountAttribute(): int
-    {
-        return $this->following()->count();
-    }
-
-    /**
-     * Get posts count.
-     */
-    public function getPostsCountAttribute(): int
-    {
-        return $this->posts()->count();
     }
 
     /*

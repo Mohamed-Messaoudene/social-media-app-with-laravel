@@ -1,7 +1,12 @@
 import { defineConfig } from 'vite'
 import laravel from 'laravel-vite-plugin'
 import react from '@vitejs/plugin-react'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
+// ✅ recreate __dirname
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 export default defineConfig({
     plugins: [
         laravel({
@@ -10,17 +15,21 @@ export default defineConfig({
         }),
         react(),
     ],
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, 'resources/js'),
+        },
+    },
     server: {
         host: '0.0.0.0',
         port: 5173,
         strictPort: true,
         hmr: {
-            host: 'localhost', // 🔥 THIS FIXES YOUR ERROR
+            host: 'localhost',
         },
-         // ✅ Add this — fixes file watching on Windows + Docker
         watch: {
             usePolling: true,
-            interval: 1000, // check every 1 second
+            interval: 1000,
         },
     },
 })

@@ -17,6 +17,7 @@ const generateTheme = (mode: ThemeMode): ThemeOptions => {
 
       secondary: {
         main: teal[500],
+        dark: teal[700],
       },
 
       // 🧠 TEXT SYSTEM

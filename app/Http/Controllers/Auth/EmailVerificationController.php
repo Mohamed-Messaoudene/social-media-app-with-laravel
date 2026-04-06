@@ -23,7 +23,7 @@ class EmailVerificationController extends Controller
     {
         // If already verified, redirect to home
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->route('home');
+            return redirect()->route('profile.show', $request->user());
         }
 
         return Inertia::render('Auth/VerifyEmail', [
@@ -42,7 +42,7 @@ class EmailVerificationController extends Controller
     {
         // Check if already verified
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->route('home')->with('info', 'Your email is already verified.');
+            return redirect()->route('profile.show', $request->user())->with('info', 'Your email is already verified.');
         }
 
         // Mark email as verified
@@ -56,7 +56,7 @@ class EmailVerificationController extends Controller
         }
 
         // Redirect to profile setup (where user can add photos, bio, etc.)
-        return redirect()->route('profile.show')->with('success', 'Email verified! Complete your profile to get started.');
+        return redirect()->route('profile.show',$request->user() )->with('success', 'Email verified! Complete your profile to get started.');
     }
 
     /**

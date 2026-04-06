@@ -9,80 +9,80 @@ use Inertia\Inertia;
 class ProfileController extends Controller
 {
     // Get profile information for a specific user
-    public function getProfileInfo($userId)
+    public function show(Request $request, User $user)
     {
-        try {
-            $authUserId = auth()->id(); // Get authenticated user ID
-    
-            // Find the user by ID
-            $user = User::withCount(['followers', 'following']) // Count followers and following
-                ->with([
-                    'posts' => function ($query) use ($authUserId) {
-                        $query->latest()
-                            ->with([
-                                'comments' => function ($query) {
-                                    $query->with('user:id,username,profileImagePath')->latest();
-                                },
-                                'user:id,username,profileImagePath',
-                                'likes' // Load likes relationship
-                            ])
-                            ->withCount('likes') // Get the number of likes for each post
-                            ->withExists(['likes as liked_by_user' => function ($query) use ($authUserId) {
-                                $query->where('user_id', $authUserId); // Check if the user liked the post
-                            }]);
-                    }
-                ])
-                ->findOrFail($userId);
-    
-            // Check if the authenticated user follows this profile
-            $isFollowing = $authUserId ? $user->followers()->where('follower_id', $authUserId)->exists() : false;
-    
-            return Inertia::render('Profile', [
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'location' => $user->location,
-                    'profileImagePath' => $user->profileImagePath,
-                    'covertureImagePath' => $user->covertureImagePath,
-                    'followers_count' => $user->followers_count,
-                    'following_count' => $user->following_count,
-                    'is_following' => $isFollowing, // Add this field to indicate if the user follows this profile
+        $authUser = $request->user();
+        $isOwnProfile = $authUser?->id === $user->id;
+
+        // ✅ Correct counts (aligned with visibility)
+        $user->loadCount([
+            'followers',
+            'following',
+            'posts as posts_count' => function ($query) use ($authUser) {
+                $query->published()->visibleTo($authUser);
+            }
+        ]);
+
+        $posts = $user->posts()
+            ->published()
+            ->visibleTo($authUser)
+            ->withExists([
+                'likes as is_liked_by_auth' => function ($query) use ($authUser) {
+                    $query->where('user_id', $authUser?->id);
+                }
+            ])
+            ->latest('published_at')
+            ->paginate(10)
+            ->through(fn($post) => [
+                'id' => $post->id,
+                'content' => $post->content,
+                'image_url' => $post->image_url,
+
+                'likes_count' => $post->likes_count,
+                'comments_count' => $post->comments_count,
+                'comments_enabled' => $post->comments_enabled,
+
+                'published_at' => [
+                    'raw' => $post->published_at?->toISOString(),
+                    'diff' => $post->published_at?->diffForHumans(),
                 ],
-                'posts' => $user->posts->map(function ($post) {
-                    return [
-                        'id' => $post->id,
-                        'postText' => $post->postText,
-                        'postImagePath' => $post->postImagePath,
-                        'created_at' => $post->created_at,
-                        'time_passed' => $this->getTimePassed($post->created_at),
-                        'user' => [
-                            'id' => $post->user->id,
-                            'username' => $post->user->username,
-                            'profileImagePath' => $post->user->profileImagePath,
-                        ],
-                        'likes_count' => $post->likes_count, // Number of likes
-                        'liked' => $post->liked_by_user, // Boolean if user liked it
-                        'comments' => $post->comments->map(function ($comment) {
-                            return [
-                                'id' => $comment->id,
-                                'comment_text' => $comment->comment_text,
-                                'created_at' => $comment->created_at,
-                                'time_passed' => $this->getTimePassed($comment->created_at),
-                                'user' => [
-                                    'id' => $comment->user->id,
-                                    'username' => $comment->user->username,
-                                    'profileImagePath' => $comment->user->profileImagePath,
-                                ],
-                            ];
-                        }),
-                    ];
-                }),
+
+                'is_liked_by_auth' => $post->is_liked_by_auth,
             ]);
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'User not found or an error occurred.']);
-        }
-    }    
+
+        return Inertia::render('Profile', [
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'location' => $user->location,
+                'profile_image_url' => $user->profile_image_url,
+                'cover_image_url' => $user->cover_image_url,
+            ],
+
+            'stats' => [
+                'followers_count' => $user->followers_count,
+                'following_count' => $user->following_count,
+                'posts_count' => $user->posts_count,
+            ],
+
+            'relationships' => [
+                'is_following' => !$isOwnProfile && $authUser
+                    ? $authUser->isFollowing($user)
+                    : false,
+
+                'is_followed_by' => !$isOwnProfile && $authUser
+                    ? $authUser->isFollowedBy($user)
+                    : false,
+
+                'is_own_profile' => $isOwnProfile,
+                'is_private' => $user->is_private,
+            ],
+
+            'posts' => $posts,
+        ]);
+        
+    }
+
 
     // Helper function to calculate time passed
     private function getTimePassed($createdAt)
@@ -91,9 +91,8 @@ class ProfileController extends Controller
         $createdAt = \Carbon\Carbon::parse($createdAt);
         return $createdAt->diffForHumans($now); // Get human-readable time difference
     }
-    public function updateProfile(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($id);
         $request->validate([
             'email' => 'required|email|unique:users,email,' . $user->id,
             'username' => 'required|string|max:255',
@@ -117,6 +116,6 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return redirect()->route('showProfile', ["userId" => $id])->with('success', 'Profile updated successfully!');
+        return redirect()->route('showProfile', ["userId" => $user->id])->with('success', 'Profile updated successfully!');
     }
 }

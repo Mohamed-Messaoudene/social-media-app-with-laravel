@@ -4,7 +4,7 @@ import { SnackBarProvider } from "@/context/SnackBarContext";
 import Navbar from "../components/layout/navbar/Navbar";
 import { ThemeProvider } from "../context/ThemeContext";
 
-export default function AppLayout({ children }) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
         <AuthProvider>
             <ThemeProvider>

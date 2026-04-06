@@ -21,8 +21,7 @@ import { Link } from "@inertiajs/react";
 function Navbar() {
     const theme = useTheme();
     const { mode, toggleTheme } = useCustomTheme();
-    const { isAuthenticated, user, logout } = useAuth();
-    console.log(user)
+    const {  user,isLoggedIn, logout } = useAuth();
 
     return (
         <Box
@@ -38,7 +37,7 @@ function Navbar() {
             paddingInline="15px"
             borderBottom="1px solid"
             borderColor={grey[300]}
-            backgroundColor={theme.palette.background.paper}
+            bgcolor={theme.palette.background.paper}
         >
             <Box
                 width="45%"
@@ -48,11 +47,12 @@ function Navbar() {
             >
                 <Link href={"/"} style={{ textDecoration: "none" }}>
                     <Box display="flex" alignItems="center">
-                        <Groups sx={{ fontSize:"33px", color: theme.palette.primary.text, marginRight: "10px" }} />
+                        <Groups sx={{ fontSize:"33px", color: theme.palette.text.primary, marginRight: "10px" }} />
                         <Typography
                             variant="body1"
                             fontWeight="bold"
-                            color={theme.palette.primary.text}
+                            color={theme.palette.text.primary
+                            }
                         >
                             Social Media
                         </Typography>
@@ -71,7 +71,7 @@ function Navbar() {
                 justifyContent="space-around"
                 alignItems="center"
             >
-                {isAuthenticated ? (
+                {isLoggedIn ? (
                     // Display when user is authenticated
                     <>
                         <IconButton aria-label="messages">
@@ -80,10 +80,10 @@ function Navbar() {
                         <IconButton aria-label="notifications">
                             <NotificationsNone />
                         </IconButton>
-                        <Link href={`/profile/${user.id}`} style={{textDecoration:"none"}}>
+                        <Link href={`/profile/${user!.username}`} style={{textDecoration:"none"}}>
                         <UserAvatar
-                            username={user.username}
-                            imgUrl={user.profileImagePath}
+                            username={user!.username}
+                            imgUrl={user!.profile_image_url}
                         />
                         </Link>
                       
@@ -99,7 +99,7 @@ function Navbar() {
                                 aria-label="register"
                                 // component={Link}
                                 // href="/register"
-                                sx={{ color: theme.palette.primary.text }} // Use primary color
+                                sx={{ color: theme.palette.text.primary }} // Use primary color
                             >
                                 <PersonAdd /> 
                                 <Typography
@@ -116,7 +116,7 @@ function Navbar() {
                             aria-label="login"
                             // component={Link}
                             // href="/login"
-                            sx={{ color: theme.palette.primary.text }} // Use primary color
+                            sx={{ color: theme.palette.text.primary }} // Use primary color
                         >
                             <Login /> {/* Login Icon */}
                             <Typography

@@ -50,11 +50,12 @@ class AuthController extends Controller
                 'username' => $request->username,
                 'email' => $request->email,
                 'password' => $request->password, // Auto-hashed by cast
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'birth_date' => $request->birth_date,
+
                 
                 // Set defaults for optional fields
+                'first_name' => null,
+                'last_name' => null,
+                'birth_date' => null,
                 'is_active' => true,
                 'is_verified' => false,
                 'is_private' => false,
@@ -66,6 +67,8 @@ class AuthController extends Controller
                 'location' => null,
             ]);
 
+
+            Log::info("User created successfully", $user->only('id', 'username', 'email'));
             DB::commit();
 
             // Fire registered event (triggers email verification)

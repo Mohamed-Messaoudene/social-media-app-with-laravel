@@ -1,17 +1,11 @@
-import { Suggestion } from "./common"
+import { AuthUser } from "./common"
 
 export {}
 
-export interface User {
-    id: number
-    username: string
-    profileImagePath: string | null
-    is_verified: boolean
-}
 
 export interface SharedProps {
     auth: {
-        user: User | null
+        user: AuthUser | null
     }
     errors: Record<string, string[]>
 
