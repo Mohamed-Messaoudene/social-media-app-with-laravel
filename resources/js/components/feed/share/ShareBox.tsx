@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { Suspense, useRef } from "react";
 import {
     Box,
     Divider,
@@ -9,93 +9,69 @@ import {
     Typography,
     IconButton,
     Popover,
-    Chip,
     alpha,
 } from "@mui/material";
 import {
     AddPhotoAlternate as AddPhoto,
     Diversity3,
-    Send,
     EmojiEmotions,
     Close as CloseIcon,
-    Public,
-    Lock,
+    ArrowForward,
+    Image as ImageIcon,
 } from "@mui/icons-material";
-import LoadingButton from "@mui/lab/LoadingButton";
-import { useSnackBar } from "@/context/SnackBarContext";
-import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
-import { useForm } from "@inertiajs/react";
 import { useAuth } from "@/context/AuthContext";
+import { ShareFormData, VISIBILITY_OPTIONS } from "@/types/post";
+import type { EmojiClickData } from "emoji-picker-react";
+import { Theme } from "emoji-picker-react";
+// ✅ Only the heavy default export (the component) gets lazy loaded
+const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
-type ShareFormData = {
-    content: string;
-    image: File | null;
+// ─── Props ────────────────────────────────────────────────────────────────────
+
+type ShareBoxProps = {
+    data: ShareFormData;
+    setData: <K extends keyof ShareFormData>(
+        key: K,
+        value: ShareFormData[K],
+    ) => void;
+    errors: Partial<Record<keyof ShareFormData, string>>;
+    previewUrl: string | null;
+    onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onRemoveImage: () => void;
+    onEmojiClick: (emojiData: EmojiClickData) => void;
+    onNext: () => void;
+    canSubmit: boolean;
+    emojiAnchor: HTMLButtonElement | null;
+    setEmojiAnchor: (el: HTMLButtonElement | null) => void;
+    fileInputRef: React.RefObject<HTMLInputElement | null>;
 };
 
-function Share() {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+function ShareBox({
+    data,
+    setData,
+    errors,
+    previewUrl,
+    onImageChange,
+    onRemoveImage,
+    onEmojiClick,
+    onNext,
+    canSubmit,
+    emojiAnchor,
+    setEmojiAnchor,
+    fileInputRef,
+}: ShareBoxProps) {
     const theme = useTheme();
     const { user } = useAuth();
-    const { showSnackBar } = useSnackBar();
-
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [emojiAnchor, setEmojiAnchor] = useState<HTMLButtonElement | null>(null);
-    const [isPrivate, setIsPrivate] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const { data, setData, post, processing, errors, reset } =
-        useForm<ShareFormData>({
-            content: "",
-            image: null,
-        });
-
-    const charLimit = 500;
-    const charCount = data.content.length;
-    const nearLimit = charCount > charLimit * 0.8;
-    const overLimit = charCount > charLimit;
-
-    // ── Handlers ────────────────────────────────────────────────────────
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!data.content.trim() && !data.image) return;
-        if (overLimit) return;
-
-        post("/posts", {
-            forceFormData: true, // ensures file upload works
-            onSuccess: () => {
-                showSnackBar("Post shared successfully!", "success");
-                reset();
-                setPreviewUrl(null);
-            },
-            onError: () => {
-                showSnackBar("Could not create post. Please try again.", "error");
-            },
-        });
-    };
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setData("image", file);
-        setPreviewUrl(URL.createObjectURL(file));
-    };
-
-    const handleRemoveImage = () => {
-        setData("image", null);
-        setPreviewUrl(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-    };
-
-    const handleEmojiClick = (emojiData: EmojiClickData) => {
-        setData("content", data.content + emojiData.emoji);
-        setEmojiAnchor(null);
-    };
-
     const isDark = theme.palette.mode === "dark";
+
+    const selectedVisibility = VISIBILITY_OPTIONS.find(
+        (v) => v.value === data.visibility,
+    )!;
 
     return (
         <Box
-            component="form"
-            onSubmit={handleSubmit}
             sx={{
                 backgroundColor: theme.palette.background.paper,
                 borderRadius: "16px",
@@ -105,7 +81,7 @@ function Share() {
                 border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
             }}
         >
-            {/* ── Top row: avatar + text input ──────────────────────── */}
+            {/* ── Avatar + textarea ──────────────────────────── */}
             <Box display="flex" gap={1.5} alignItems="flex-start">
                 <Avatar
                     src={user?.profile_image_url ?? undefined}
@@ -128,10 +104,12 @@ function Share() {
                         minRows={2}
                         maxRows={8}
                         placeholder={`What's on your mind, ${user?.username}?`}
-                        value={data.content}
-                        onChange={(e) => setData("content", e.target.value)}
+                        value={data.post_content}
+                        onChange={(e) =>
+                            setData("post_content", e.target.value)
+                        }
                         variant="standard"
-                        error={Boolean(errors.content) || overLimit}
+                        error={Boolean(errors.post_content)}
                         InputProps={{ disableUnderline: true }}
                         sx={{
                             "& .MuiInputBase-input": {
@@ -139,75 +117,65 @@ function Share() {
                                 lineHeight: 1.55,
                                 color: theme.palette.text.primary,
                                 "&::placeholder": {
-                                    color: alpha(theme.palette.text.secondary, 0.6),
+                                    color: alpha(
+                                        theme.palette.text.secondary,
+                                        0.6,
+                                    ),
                                     opacity: 1,
                                 },
                             },
                         }}
                     />
 
-                    {/* Char counter — only shown near limit */}
-                    {nearLimit && (
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                color: overLimit ? "#ef4444" : "#f59e0b",
-                                fontWeight: 600,
-                                display: "block",
-                                textAlign: "right",
-                                mt: 0.5,
-                            }}
-                        >
-                            {charLimit - charCount}{" "}
-                            {charLimit - charCount === 1 ? "character" : "characters"} left
-                        </Typography>
-                    )}
-
-                    {errors.content && (
+                    {errors.post_content && (
                         <Typography
                             variant="caption"
                             color="error"
                             display="block"
                             mt={0.3}
                         >
-                            {errors.content}
+                            {errors.post_content}
                         </Typography>
                     )}
                 </Box>
 
-                {/* Emoji button */}
+                {/* Emoji trigger */}
                 <IconButton
                     size="small"
                     onClick={(e) => setEmojiAnchor(e.currentTarget)}
                     sx={{
                         mt: 0.5,
                         color: "#f59e0b",
-                        "&:hover": {
-                            backgroundColor: alpha("#f59e0b", 0.1),
-                        },
+                        "&:hover": { backgroundColor: alpha("#f59e0b", 0.1) },
                     }}
                 >
                     <EmojiEmotions fontSize="small" />
                 </IconButton>
             </Box>
 
-            {/* ── Emoji picker popover ───────────────────────────────── */}
+            {/* ── Emoji popover ──────────────────────────────── */}
             <Popover
                 open={Boolean(emojiAnchor)}
                 anchorEl={emojiAnchor}
                 onClose={() => setEmojiAnchor(null)}
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
-                PaperProps={{ sx: { borderRadius: "12px", overflow: "hidden" } }}
+                PaperProps={{
+                    sx: { borderRadius: "12px", overflow: "hidden" },
+                }}
             >
-                <EmojiPicker
-                    onEmojiClick={handleEmojiClick}
-                    theme={isDark ? Theme.DARK : Theme.LIGHT}
-                    height={380}
-                />
+                <Suspense fallback={null}>
+                    {emojiAnchor && (
+                        <EmojiPicker
+                            onEmojiClick={onEmojiClick}
+                            theme={isDark ? Theme.DARK : Theme.LIGHT}
+                            height={380}
+                        />
+                    )}
+                </Suspense>
             </Popover>
 
-            {/* ── Image preview ──────────────────────────────────────── */}
+            {/* ── Image preview ──────────────────────────────── */}
             {previewUrl && (
                 <Box
                     sx={{
@@ -224,14 +192,14 @@ function Share() {
                         alt="Preview"
                         sx={{
                             width: "100%",
-                            maxHeight: 320,
+                            maxHeight: 280,
                             objectFit: "cover",
                             display: "block",
                         }}
                     />
                     <IconButton
                         size="small"
-                        onClick={handleRemoveImage}
+                        onClick={onRemoveImage}
                         sx={{
                             position: "absolute",
                             top: 8,
@@ -248,7 +216,7 @@ function Share() {
 
             <Divider sx={{ my: 1.8 }} />
 
-            {/* ── Bottom row: actions + submit ───────────────────────── */}
+            {/* ── Bottom actions ─────────────────────────────── */}
             <Box
                 display="flex"
                 justifyContent="space-between"
@@ -256,9 +224,8 @@ function Share() {
                 flexWrap="wrap"
                 gap={1}
             >
-                {/* Left: action buttons */}
                 <Box display="flex" alignItems="center" gap={0.5}>
-                    {/* Image upload */}
+                    {/* Photo upload */}
                     <Button
                         component="label"
                         variant="text"
@@ -281,7 +248,7 @@ function Share() {
                             ref={fileInputRef}
                             type="file"
                             accept="image/*"
-                            onChange={handleImageChange}
+                            onChange={onImageChange}
                             hidden
                         />
                     </Button>
@@ -306,47 +273,51 @@ function Share() {
                         Tag
                     </Button>
 
-                    {/* Audience toggle */}
-                    <Chip
-                        icon={
-                            isPrivate ? (
-                                <Lock sx={{ fontSize: "14px !important" }} />
-                            ) : (
-                                <Public sx={{ fontSize: "14px !important" }} />
-                            )
-                        }
-                        label={isPrivate ? "Only me" : "Everyone"}
-                        size="small"
-                        onClick={() => setIsPrivate((p) => !p)}
+                    {/* Visibility badge — also opens modal */}
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={0.5}
+                        onClick={canSubmit ? onNext : undefined}
                         sx={{
-                            height: 28,
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            cursor: "pointer",
+                            px: 1,
+                            py: 0.4,
                             borderRadius: "8px",
-                            backgroundColor: isPrivate
-                                ? alpha("#64748b", 0.1)
-                                : alpha("#10b981", 0.1),
-                            color: isPrivate ? "#64748b" : "#10b981",
-                            border: `1px solid ${isPrivate ? alpha("#64748b", 0.25) : alpha("#10b981", 0.25)}`,
-                            "& .MuiChip-icon": {
-                                color: "inherit",
-                            },
+                            backgroundColor: alpha(
+                                selectedVisibility.color,
+                                0.07,
+                            ),
+                            color: selectedVisibility.color,
+                            cursor: canSubmit ? "pointer" : "default",
+                            transition: "background 0.15s",
+                            "&:hover": canSubmit
+                                ? {
+                                      backgroundColor: alpha(
+                                          selectedVisibility.color,
+                                          0.13,
+                                      ),
+                                  }
+                                : {},
                         }}
-                    />
+                    >
+                        {<selectedVisibility.icon />}
+                        <Typography
+                            variant="caption"
+                            fontWeight={600}
+                            fontSize="12px"
+                        >
+                            {selectedVisibility.label}
+                        </Typography>
+                    </Box>
                 </Box>
 
-                {/* Right: submit */}
-                <LoadingButton
-                    type="submit"
-                    size="small"
-                    endIcon={<Send />}
-                    loading={processing}
-                    loadingPosition="end"
+                {/* Next button */}
+                <Button
                     variant="contained"
-                    disabled={
-                        (!data.content.trim() && !data.image) || overLimit
-                    }
+                    size="small"
+                    endIcon={<ArrowForward />}
+                    disabled={!canSubmit}
+                    onClick={onNext}
                     sx={{
                         textTransform: "none",
                         fontWeight: 600,
@@ -356,11 +327,27 @@ function Share() {
                         "&:hover": { boxShadow: "none" },
                     }}
                 >
-                    Share
-                </LoadingButton>
+                    Next
+                </Button>
             </Box>
+
+            {/* Empty hint */}
+            {!data.post_content && !data.image && (
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={0.8}
+                    mt={1}
+                    sx={{ opacity: 0.35 }}
+                >
+                    <ImageIcon sx={{ fontSize: 13, color: "text.disabled" }} />
+                    <Typography variant="caption" color="text.disabled">
+                        Write something or add a photo to continue
+                    </Typography>
+                </Box>
+            )}
         </Box>
     );
 }
 
-export default Share;
+export default ShareBox;

@@ -7,7 +7,7 @@ import FormInput from "../../components/ui/FormInput"; // ✅ reusable input
 import { useSnackBar } from "../../context/SnackBarContext";
 import { useForm, Link } from "@inertiajs/react";
 import { route } from "ziggy-js";
-import { registerSchema } from "../../schemas/auth";
+import { registerBaseSchema, registerSchema } from "../../schemas/auth";
 import z from "zod";
 
 // Derive the type from the schema — no need to define it manually
@@ -41,7 +41,7 @@ function Register() {
         setData(name as keyof RegisterFormData, value);
 
         // ✅ Parse only the changed field using a partial pick
-        const singleFieldSchema = registerSchema.pick({
+        const singleFieldSchema = registerBaseSchema.pick({
             [name]: true,
         } as Record<keyof RegisterFormData, true>);
         const fieldResult = singleFieldSchema.safeParse({ [name]: value });
@@ -55,7 +55,7 @@ function Register() {
         }));
     };
 
-    const handleRegisterSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleRegisterSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         // ✅ Validate the entire form before submitting

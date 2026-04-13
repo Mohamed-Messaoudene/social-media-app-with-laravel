@@ -1,12 +1,12 @@
 import React from "react";
 import { Box } from "@mui/material";
 import Stories from "@/components/feed/stories/Stories";
-import Share from "@/components/feed/Share";
 import Posts from "@/components/feed/posts/Posts";
 import Leftbar from "@/components/layout/Leftbar";
 import { usePage } from "@inertiajs/react";
 import { HomePageProps } from "@/types/home";
 import Rightbar from "@/components/layout/RightBar/Rightbar";
+import Share from "@/components/feed/Share";
 
 const NAVBAR_HEIGHT = "67px";
 const LEFT_WIDTH = "17%";

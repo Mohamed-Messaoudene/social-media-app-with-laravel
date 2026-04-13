@@ -44,7 +44,6 @@ class Post extends Model
      */
     protected $appends = [
         'image_url',
-        'is_liked_by_auth',
         // 'is_bookmarked_by_auth',
     ];
 
@@ -114,20 +113,6 @@ class Post extends Model
     public function getImageUrlAttribute(): ?string
     {
         return $this->image_path ? Storage::url($this->image_path) : null;
-    }
-
-    /**
-     * Check if authenticated user liked this post.
-     */
-    public function getIsLikedByAuthAttribute(): bool
-    {
-        if (!auth()->check()) {
-            return false;
-        }
-
-        return $this->likes()
-            ->where('user_id', auth()->id())
-            ->exists();
     }
 
     /**

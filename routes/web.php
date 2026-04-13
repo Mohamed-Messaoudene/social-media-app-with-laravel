@@ -69,11 +69,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Route::get('/trending', [PostController::class, 'trending'])->name('trending');
 
     // ==================== POSTS ====================
-    // Route::prefix('posts')->name('posts.')->group(function () {
-    //     Route::post('/', [PostController::class, 'store'])->name('store');
-    //     Route::get('/{post}', [PostController::class, 'show'])->name('show');
-    //     Route::put('/{post}', [PostController::class, 'update'])->name('update');
-    //     Route::delete('/{post}', [PostController::class, 'destroy'])->name('destroy');
+    Route::prefix('posts')->name('posts.')->group(function () {
+        Route::post('/', [PostController::class, 'store'])->name('store');
+        // Route::get('/{post}', [PostController::class, 'show'])->name('show');
+        // Route::put('/{post}', [PostController::class, 'update'])->name('update');
+        // Route::delete('/{post}', [PostController::class, 'destroy'])->name('destroy');
 
     //     // Post interactions
     //     Route::post('/{post}/like', [LikeController::class, 'toggleLike'])->name('like');
@@ -85,7 +85,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     //     Route::post('/comments/{comment}/like', [LikeController::class, 'toggleCommentLike'])->name('comments.like');
     //     Route::post('/comments/{comment}/reply', [CommentController::class, 'reply'])->name('comments.reply');
-    // });
+    });
 
     // ==================== STORIES ====================
     // Route::prefix('stories')->name('stories.')->group(function () {
